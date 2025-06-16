@@ -2,12 +2,11 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import { toPascalCase, toKebabCase } from '../../utils/stringUtils';
-import { parseSchemaFields } from '../../utils/schemaParser';
+import { toPascalCase, toKebabCase, toCamelCase } from '../../utils/stringUtils';
+import { parseSchemaFields, ParsedField } from '../../utils/schemaParser';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
-
-interface DomainOptions {
+import { logger } from '../../utils/logger';
   fields?: string;
 }
 
@@ -38,20 +37,24 @@ export function generateDomain(name: string, options: DomainOptions) {
   const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'domain');
   const targetFilePath = path.join(targetDir, `${kebabCaseName}.do.ts`);
 
-  fs.ensureDirSync(targetDir);
-  fs.writeFileSync(targetFilePath, content);
-
-  console.log(`Domain object generated: ${targetFilePath}`);
+  try {
+    fs.ensureDirSync(targetDir);
+    fs.writeFileSync(targetFilePath, content);
+    logger.generated(targetFilePath, `${pascalCaseName} Domain Object`);
+  } catch (e: any) {
+    logger.error(`Failed to generate Domain Object '${name}': ${e.message}`);
+  }
 }
 
 export function registerGenerateDomainCommand(program: Command) {
   program
     .command('domain <name>')
     .aliases(['do', 'gdo'])
-    .description('Generate a new Domain Object interface')
-    .option(
-      '-f, --fields <fields>',
-      'Comma-separated list of domain object fields (e.g., "name:string,description?:string,count:number,tags:string[]")'
-    )
+    .description('Generate a new Domain Object TypeScript interface. This represents the core business entity.')
+    .option('-f, --fields <fields>', 'Comma-separated list of domain object fields and their types (e.g., "name:string,description?:string,count:number,tags:string[],isActive:boolean,contact:ContactDto"). Use "?" for optional fields. Custom types can be used.')
+    .addHelpText('after', `
+Examples:
+  noony generate domain user --fields "username:string,email:string,isActive?:boolean"
+  noony generate domain product --fields "productName:string,price:number,category:string,details:ProductDetail"`)
     .action(generateDomain);
 }

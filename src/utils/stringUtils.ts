@@ -3,13 +3,11 @@
 import * as pluralizeLib from 'pluralize';
 
 export function toPascalCase(str: string): string {
-  return str.replace(/(^\w|-\w)/g, match =>
-    match.replace(/-/, '').toUpperCase()
-  );
+  return str.replace(/(^\w|-\w)/g, (match) => match.replace(/-/, '').toUpperCase());
 }
 
 export function toCamelCase(str: string): string {
-  return str.replace(/-\w/g, match => match.charAt(1).toUpperCase());
+  return str.replace(/-\w/g, (match) => match.charAt(1).toUpperCase());
 }
 
 export function toKebabCase(str: string): string {

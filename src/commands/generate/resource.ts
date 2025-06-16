@@ -1,8 +1,7 @@
 import { Command } from 'commander';
 import { generateFeature } from './feature'; // Import the main feature generator
-// import { toKebabCase } from '../../utils/stringUtils';
-
-interface ResourceOptions {
+import { toKebabCase } from '../../utils/stringUtils';
+import { logger } from '../../utils/logger';
   // Fields for Domain, DTO, DAO
   fields?: string;
 
@@ -34,8 +33,8 @@ interface ResourceOptions {
 const resourceCrudMethods = 'get,post,put,delete,getAll';
 
 export async function generateResource(name: string, options: ResourceOptions) {
-  console.log(`🧱 Generating RESTful resource: ${name}`);
-  console.log('------------------------------------------');
+  logger.info(`🧱 Generating RESTful resource: ${name}`);
+  // No need for the '----' log here as generateFeature will log its own header.
 
   // Prepare options for the core 'generateFeature' command
   // 'generateResource' acts as a specialized preset for 'generateFeature'
@@ -71,32 +70,25 @@ export function registerGenerateResourceCommand(program: Command) {
   program
     .command('resource <name>')
     .aliases(['gres', 'res'])
-    .description(
-      'Generate a RESTful CRUD resource (domain, DTO, DAO, service, API, handlers, routes, tests)'
-    )
-    .option(
-      '-f, --fields <fields>',
-      'Comma-separated fields for Domain, DTO, and DAO (e.g., "name:string,price:number,category:string")'
-    )
-    .option(
-      '--collection <name>',
-      'MongoDB collection name for DAO (defaults to pluralized name)'
-    )
-    .option(
-      '--dao-identifier <field>',
-      'Primary identifier for DAO methods (default: id)'
-    )
-    .option('--route-prefix <prefix>', 'Prefix for API routes (e.g., /v1)')
-    .option('--auth <type>', 'Authentication type for handlers/routes')
-    .option('--skip-domain', 'Skip Domain Object generation')
-    .option('--skip-dto', 'Skip DTO generation')
-    .option('--skip-dao', 'Skip DAO generation')
-    .option('--skip-service', 'Skip Service generation')
-    .option('--skip-api', 'Skip API class generation')
-    .option('--skip-handlers', 'Skip Handlers generation')
-    .option('--skip-routes', 'Skip Routes generation')
-    .option('--skip-tests', 'Skip all Test generation')
-    .option('--skip-unit-tests', 'Skip Unit Test generation')
-    .option('--skip-e2e-tests', 'Skip E2E Test generation')
+    .description('Generate a standard RESTful CRUD resource. This is a preset for "generate feature" with default CRUD methods and options tailored for resources.')
+    .option('-f, --fields <fields>', 'Comma-separated fields for Domain, DTO, and DAO schema (e.g., "name:string,price:number,category:string"). Types are string, number, boolean, date, objectId, uuid, or custom.')
+    .option('--collection <name>', 'MongoDB collection name for DAO. Defaults to pluralized <name>.')
+    .option('--dao-identifier <field>', 'Primary identifier for DAO methods. Defaults to "id".')
+    .option('--route-prefix <prefix>', 'URL prefix for API routes (e.g., "/products"). Default: From .noonyrc.json or "/v1".')
+    .option('--auth <type>', 'Authentication type (e.g., "jwt", "apiKey"). Informational for generated comments.')
+    .option('--skip-domain', 'Skip Domain Object generation.')
+    .option('--skip-dto', 'Skip DTO generation.')
+    .option('--skip-dao', 'Skip DAO generation.')
+    .option('--skip-service', 'Skip Service generation.')
+    .option('--skip-api', 'Skip API class generation.')
+    .option('--skip-handlers', 'Skip Handlers generation.')
+    .option('--skip-routes', 'Skip Routes generation.')
+    .option('--skip-tests', 'Skip all Test generation.')
+    .option('--skip-unit-tests', 'Skip Unit Test generation.')
+    .option('--skip-e2e-tests', 'Skip E2E Test generation.')
+    .addHelpText('after', `
+Examples:
+  noony generate resource product --fields "name:string,price:number,sku:string"
+  noony gres customer --fields "email:string,firstName:string,lastName:string" --collection "customer_data" --skip-e2e-tests`)
     .action(generateResource);
 }

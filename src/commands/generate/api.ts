@@ -2,15 +2,10 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import {
-  toPascalCase,
-  toCamelCase,
-  toKebabCase,
-} from '../../utils/stringUtils';
+import { toPascalCase, toCamelCase, toKebabCase } from '../../utils/stringUtils';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
-
-interface ApiOptions {
+import { logger } from '../../utils/logger';
   service?: boolean; // Not actively used yet, but kept from spec
   methods?: string;
 }
@@ -26,9 +21,7 @@ export function generateApi(name: string, options: ApiOptions) {
   const camelCaseName = toCamelCase(name);
   const kebabCaseName = toKebabCase(name);
 
-  const methodsArg = (options.methods || defaultApiMethods)
-    .split(',')
-    .map(m => m.trim().toLowerCase());
+  const methodsArg = (options.methods || defaultApiMethods).split(',').map(m => m.trim().toLowerCase());
   const methodsForTemplate = {
     get: methodsArg.includes('get'),
     create: methodsArg.includes('create'),
@@ -49,33 +42,20 @@ export function generateApi(name: string, options: ApiOptions) {
   });
 
   // Corrected path as per issue doc: src/chrome/handlers/api/<name>Api.ts
-  const targetDir = path.join(
-    process.cwd(),
-    getSrcPath(),
-    'chrome',
-    'handlers',
-    'api'
-  );
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', 'api');
   const targetFilePath = path.join(targetDir, `${pascalCaseName}Api.ts`); // User PascalCase for filename
 
-  fs.ensureDirSync(targetDir);
-  fs.writeFileSync(targetFilePath, content);
+  try {
+    fs.ensureDirSync(targetDir);
+    fs.writeFileSync(targetFilePath, content);
+    logger.generated(targetFilePath, `${pascalCaseName} API Class`);
 
-  console.log(`API class generated: ${targetFilePath}`);
-
-  // Create placeholder Service file if it doesn't exist
-  const serviceDir = path.join(
-    process.cwd(),
-    getSrcPath(),
-    'chrome',
-    'services'
-  );
-  fs.ensureDirSync(serviceDir);
-  const servicePath = path.join(serviceDir, `${pascalCaseName}Service.ts`);
-  if (!fs.existsSync(servicePath)) {
-    fs.writeFileSync(
-      servicePath,
-      `
+    // Create placeholder Service file
+    const serviceDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'services');
+    fs.ensureDirSync(serviceDir);
+    const servicePath = path.join(serviceDir, `${pascalCaseName}Service.ts`);
+    if (!fs.existsSync(servicePath)) {
+      fs.writeFileSync(servicePath, `
 // Placeholder for ${pascalCaseName}Service
 import { Service } from 'typedi';
 import { ${pascalCaseName} } from '../domain/${kebabCaseName}.do'; // Assuming domain object path
@@ -91,18 +71,16 @@ export class ${pascalCaseName}Service {
   async delete${pascalCaseName}(id: string): Promise<boolean> { console.log('Service: delete${pascalCaseName} placeholder hit'); return false; }
   async getAll${pascalCaseName}s(queryParams?: any): Promise<${pascalCaseName}[]> { console.log('Service: getAll${pascalCaseName}s placeholder hit'); return []; }
 }
-`
-    );
-  }
+`);
+      logger.info(`Placeholder created: ${servicePath}`);
+    }
 
-  // Create placeholder Domain Object file if it doesn't exist
-  const domainDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'domain');
-  fs.ensureDirSync(domainDir);
-  const domainPath = path.join(domainDir, `${kebabCaseName}.do.ts`);
-  if (!fs.existsSync(domainPath)) {
-    fs.writeFileSync(
-      domainPath,
-      `
+    // Create placeholder Domain Object file
+    const domainDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'domain');
+    fs.ensureDirSync(domainDir);
+    const domainPath = path.join(domainDir, `${kebabCaseName}.do.ts`);
+    if (!fs.existsSync(domainPath)) {
+      fs.writeFileSync(domainPath, `
 // Placeholder for ${pascalCaseName} Domain Object
 export interface ${pascalCaseName} {
   id?: string;
@@ -110,8 +88,11 @@ export interface ${pascalCaseName} {
   createdAt?: Date;
   updatedAt?: Date;
 }
-`
-    );
+`);
+      logger.info(`Placeholder created: ${domainPath}`);
+    }
+  } catch (e: any) {
+    logger.error(`Failed to generate API class '${name}': ${e.message}`);
   }
 }
 
@@ -119,12 +100,12 @@ export function registerGenerateApiCommand(program: Command) {
   program
     .command('api <name>')
     .aliases(['ga'])
-    .description('Generate a new API class')
-    .option('--service', 'Corresponds to a service (implicit for now)') // Kept from spec
-    .option(
-      '-m, --methods <methods>',
-      'Comma-separated list of API methods (get,create,update,delete,getAll)',
-      defaultApiMethods
-    )
+    .description('Generate a new API class that interacts with a corresponding service. Creates placeholder service and domain object if they do not exist.')
+    .option('--service', 'Link to a service (currently implicit, future use for specific service linkage)')
+    .option('-m, --methods <methods>', `Comma-separated list of API methods to generate (e.g., "get,create,update,delete,getAll"). Default: "${defaultApiMethods}"`)
+    .addHelpText('after', `
+Examples:
+  noony generate api user
+  noony generate api item --methods "get,create"`)
     .action(generateApi);
 }

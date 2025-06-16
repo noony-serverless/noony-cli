@@ -1,8 +1,7 @@
 import { Command } from 'commander';
-// import * as path from 'path';
-// import * as fs from 'fs-extra'; // To check existence if needed, or for future dynamic loading
-
-interface TemplateInfo {
+import * as path from 'path';
+import * as fs from 'fs-extra'; // To check existence if needed, or for future dynamic loading
+import { logger } from '../../utils/logger';
   name: string;
   description: string;
   filePath: string; // Relative to project root or src for clarity
@@ -15,8 +14,7 @@ interface TemplateInfo {
 const builtInTemplates: TemplateInfo[] = [
   {
     name: 'Handler',
-    description:
-      'Generates a Noony request handler file with specified methods.',
+    description: 'Generates a Noony request handler file with specified methods.',
     filePath: 'src/templates/handler.hbs',
   },
   {
@@ -26,8 +24,7 @@ const builtInTemplates: TemplateInfo[] = [
   },
   {
     name: 'Service',
-    description:
-      'Generates a service class with TypeDI integration and mappers.',
+    description: 'Generates a service class with TypeDI integration and mappers.',
     filePath: 'src/templates/service.hbs',
   },
   {
@@ -68,46 +65,44 @@ const builtInTemplates: TemplateInfo[] = [
   // Add other templates as they are created
 ];
 
-export function listTemplates(_options: any) {
-  console.log(`
+export function listTemplates(options: any) {
+  logger.plain(`
 📦 Available Built-in Templates:`);
-  console.log('--------------------------------');
+  logger.plain("--------------------------------");
 
   if (builtInTemplates.length === 0) {
-    console.log('No built-in templates defined yet.');
+    logger.info("No built-in templates defined yet.");
   } else {
     builtInTemplates.forEach(template => {
-      // Check if template file actually exists before listing (optional, good for robustness)
-      // const fullPath = path.join(__dirname, '../../../', template.filePath); // Adjust relative path calculation
+      // Optional: Check if template file actually exists
+      // const fullPath = path.join(__dirname, '../../../', template.filePath);
       // if (!fs.existsSync(fullPath)) {
-      //   console.warn(`Warning: Template file not found for ${template.name} at ${template.filePath}`);
-      //   return;
+      //   logger.warn(`Template file not found for ${template.name} at ${template.filePath}`);
+      //   // return; // Skip listing if not found, or list with a warning
       // }
-      console.log(`  • Name: ${template.name}`);
-      console.log(`    Description: ${template.description}`);
-      console.log(`    File Path: ${template.filePath}`);
-      // if (template.keyPlaceholders && template.keyPlaceholders.length > 0) {
-      //   console.log(`    Key Placeholders: ${template.keyPlaceholders.join(', ')}`);
-      // }
+      logger.plain(`
+  • Name: ${chalk.bold(template.name)}`); // Using chalk directly for specific formatting
+      logger.plain(`    Description: ${template.description}`);
+      logger.plain(`    File Path: ${chalk.dim(template.filePath)}`);
     });
   }
-  console.log('--------------------------------');
-  // TODO: Future enhancement - Discover and list custom templates from .noonyrc.json
-  console.log(`
-ℹ️  Note: Custom template listing will be available after .noonyrc.json configuration is implemented.`);
+  logger.plain("--------------------------------");
+  logger.info("Note: Custom template listing will be available after .noonyrc.json configuration is implemented.");
 }
 
 export function registerListTemplatesCommand(program: Command) {
-  const listCommand = program
-    .command('list')
-    .alias('ls')
-    .description('List available Noony items.');
+  const listCommand = program.command('list').alias('ls').description('List various available items within the Noony CLI ecosystem.');
 
   listCommand
     .command('templates')
     .alias('t')
-    .description(
-      'Shows available built-in templates and their customization options.'
-    )
+    .description('Displays a list of all built-in Handlebars templates used for code generation, showing their names, descriptions, and file paths.')
+    .addHelpText('after', `
+Examples:
+  noony list templates
+  noony ls t`)
     .action(listTemplates);
 }
+
+// Direct chalk import for specific formatting not covered by logger
+import chalk from 'chalk';

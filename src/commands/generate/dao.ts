@@ -2,17 +2,11 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import {
-  toPascalCase,
-  toCamelCase,
-  toKebabCase,
-  pluralize,
-} from '../../utils/stringUtils';
+import { toPascalCase, toCamelCase, toKebabCase, pluralize } from '../../utils/stringUtils';
 import { parseSchemaFields } from '../../utils/schemaParser';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
-
-interface DaoOptions {
+import { logger } from '../../utils/logger';
   collection?: string;
   schemaFields?: string;
   identifier?: string;
@@ -31,8 +25,8 @@ export function generateDao(name: string, options: DaoOptions) {
   // Default identifier to 'id', which will be mapped to '_id' in ObjectId context
   const identifierField = options.identifier || 'id';
   // If identifier is 'id', treat it as '_id' for MongoDB context in template
-  const templateIdentifier =
-    identifierField.toLowerCase() === 'id' ? '_id' : identifierField;
+  const templateIdentifier = identifierField.toLowerCase() === 'id' ? '_id' : identifierField;
+
 
   const templateContent = getTemplateContent('dao', 'dao.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
@@ -49,16 +43,15 @@ export function generateDao(name: string, options: DaoOptions) {
   const targetDir = path.join(process.cwd(), getSrcPath(), 'infra', 'db');
   const targetFilePath = path.join(targetDir, `${kebabCaseName}.dao.ts`);
 
-  fs.ensureDirSync(targetDir);
-  fs.writeFileSync(targetFilePath, content);
-  console.log(`DAO generated: ${targetFilePath}`);
+  try {
+    fs.ensureDirSync(targetDir);
+    fs.writeFileSync(targetFilePath, content);
+    logger.generated(targetFilePath, `${pascalCaseName} DAO`);
 
-  // Ensure mongo.dao.ts and mongodb-connect-service.ts exist (placeholders)
-  const mongoDaoPath = path.join(targetDir, 'mongo.dao.ts');
-  if (!fs.existsSync(mongoDaoPath)) {
-    fs.writeFileSync(
-      mongoDaoPath,
-      `
+    // Ensure mongo.dao.ts and mongodb-connect-service.ts exist (placeholders)
+    const mongoDaoPath = path.join(targetDir, 'mongo.dao.ts');
+    if (!fs.existsSync(mongoDaoPath)) {
+      fs.writeFileSync(mongoDaoPath, `
 // Placeholder for base MongoDao
 import { z } from 'zod';
 import { Collection, Db, ObjectId, Filter, FindOptions, UpdateFilter, UpdateOptions } from 'mongodb';
@@ -114,18 +107,13 @@ export abstract class MongoDao<TDocument extends { _id?: ObjectId }> {
     return result.deletedCount === 1;
   }
 }
-`
-    );
-  }
+`);
+      logger.info(`Placeholder created: ${mongoDaoPath}`);
+    }
 
-  const mongoConnectServicePath = path.join(
-    targetDir,
-    'mongodb-connect-service.ts'
-  );
-  if (!fs.existsSync(mongoConnectServicePath)) {
-    fs.writeFileSync(
-      mongoConnectServicePath,
-      `
+    const mongoConnectServicePath = path.join(targetDir, 'mongodb-connect-service.ts');
+    if (!fs.existsSync(mongoConnectServicePath)) {
+      fs.writeFileSync(mongoConnectServicePath, `
 // Placeholder for MongodbConnectService
 import { Service } from 'typedi';
 import { MongoClient, Db } from 'mongodb';
@@ -154,8 +142,11 @@ export class MongodbConnectService {
     // console.log('Disconnected from MongoDB.');
   }
 }
-`
-    );
+`);
+      logger.info(`Placeholder created: ${mongoConnectServicePath}`);
+    }
+  } catch (e: any) {
+    logger.error(`Failed to generate DAO '${name}': ${e.message}`);
   }
 }
 
@@ -163,19 +154,13 @@ export function registerGenerateDaoCommand(program: Command) {
   program
     .command('dao <name>')
     .alias('d')
-    .description('Generate a new MongoDB DAO with Zod schema')
-    .option(
-      '-c, --collection <name>',
-      'MongoDB collection name (defaults to pluralized kebab-case name)'
-    )
-    .option(
-      '-s, --schema-fields <fields>',
-      'Comma-separated list of schema fields (e.g., "name:string,email:string,age?:number,isActive:boolean,birthDate:date,refId:objectId")'
-    )
-    .option(
-      '-i, --identifier <field>',
-      'Primary identifier field for find/upsert methods (defaults to "id", maps to "_id")',
-      'id'
-    )
+    .description('Generate a new MongoDB Data Access Object (DAO) with Zod schema and placeholder base classes (MongoDao, MongodbConnectService) if they do not exist.')
+    .option('-c, --collection <name>', 'MongoDB collection name (e.g., "users"). Defaults to pluralized kebab-case of <name>.')
+    .option('-s, --schema-fields <fields>', 'Comma-separated list of schema fields for Zod schema generation (e.g., "name:string,email:string,age?:number,isActive:boolean,birthDate:date,refId:objectId").')
+    .option('-i, --identifier <field>', 'Primary identifier field for findBy/upsertBy methods (e.g., "email", "userId"). Defaults to "id" (which maps to "_id" in MongoDB).')
+    .addHelpText('after', `
+Examples:
+  noony generate dao user --collection "users" --schema-fields "email:string,passwordHash:string,role:string"
+  noony generate dao product --schema-fields "productName:string,price:number,tags:string[]" --identifier "productCode"`)
     .action(generateDao);
 }

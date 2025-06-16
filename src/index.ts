@@ -20,15 +20,10 @@ const program = new Command();
 
 program
   .name('noony')
-  .description(
-    'CLI tool to generate components for the Noony + Fastify serverless architecture'
-  )
+  .description('CLI tool to generate components for the Noony + Fastify serverless architecture')
   .version(version);
 
-const generateCommand = program
-  .command('generate')
-  .alias('g')
-  .description('Generate Noony components');
+const generateCommand = program.command('generate').alias('g').description('Generate Noony components');
 
 registerGenerateHandlerCommand(generateCommand);
 registerGenerateRouteCommand(generateCommand);
@@ -41,9 +36,10 @@ registerGenerateTestCommand(generateCommand);
 registerGenerateFeatureCommand(generateCommand);
 registerGenerateResourceCommand(generateCommand);
 
-// Register the 'list' command and its subcommands
-registerListTemplatesCommand(program);
-registerValidateCommand(program);
-registerUpdateDepsCommand(program); // Add this line
+
+   // Register the 'list' command and its subcommands
+   registerListTemplatesCommand(program);
+   registerValidateCommand(program);
+   registerUpdateDepsCommand(program); // Add this line
 
 program.parse(process.argv);
