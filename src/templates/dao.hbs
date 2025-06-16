@@ -1,0 +1,76 @@
+import { Service } from 'typedi';
+import { z } from 'zod';
+import { ObjectId } from 'mongodb';
+import { MongoDao } from './mongo.dao'; // Assuming base class
+import { MongodbConnectService } from './mongodb-connect-service'; // Assuming DI service
+
+// Define Zod schema based on provided fields
+export const {{pascalCase name}}MongoSchema = z.object({
+  _id: z.instanceof(ObjectId).optional(),
+  {{#each schemaFields}}
+  {{this.name}}: {{this.zodType}}{{#if this.isOptional}}.optional(){{/if}},
+  {{/each}}
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export type {{pascalCase name}}Document = z.infer<typeof {{pascalCase name}}MongoSchema>;
+const MONGO_COLLECTION_NAME: string = '{{collectionName}}';
+
+@Service() // DAOs can be services for direct injection if needed, or instantiated by other services
+export class {{pascalCase name}}Dao extends MongoDao<{{pascalCase name}}Document> {
+  constructor(mongoService: MongodbConnectService) {
+    super(mongoService, MONGO_COLLECTION_NAME, {{pascalCase name}}MongoSchema);
+  }
+
+  // Example finder method based on a unique identifier (e.g., {{identifierField}})
+  // The issue uses {{name}}Id, but {{identifierField}} makes it more generic
+  async findBy{{pascalCase identifierField}}({{identifierField}}: string): Promise<{{pascalCase name}}Document | null> {
+    // Assuming {{identifierField}} is a string representation of ObjectId if it's '_id'
+    // Or a direct query if it's another unique field.
+    {{#if (eq identifierField "_id")}}
+    if (!ObjectId.isValid({{identifierField}})) return null;
+    return await this.findOne({ _id: new ObjectId({{identifierField}}) });
+    {{else}}
+    return await this.findOne({ {{identifierField}}: {{identifierField}} });
+    {{/if}}
+  }
+
+  async upsertBy{{pascalCase identifierField}}(
+    {{identifierField}}: string,
+    data: Partial<Omit<{{pascalCase name}}Document, '_id' | 'createdAt' | 'updatedAt'>> // Exclude non-updatable fields from input type
+  ): Promise<{{pascalCase name}}Document | null> {
+    const now = new Date();
+    const updatePayload = {
+      ...data,
+      updatedAt: now,
+    };
+
+    let query;
+    {{#if (eq identifierField "_id")}}
+    if (!ObjectId.isValid({{identifierField}})) {
+        // If ID is invalid and it's an upsert for _id, it implies a create operation without a valid existing ID.
+        // So, we should treat it as an insert.
+        const insertData = { ...updatePayload, createdAt: now };
+        return await this.insertOne(insertData as {{pascalCase name}}Document);
+    }
+    query = { _id: new ObjectId({{identifierField}}) };
+    {{else}}
+    query = { {{identifierField}}: {{identifierField}} };
+    {{/if}}
+
+    const result = await this.collection.findOneAndUpdate(
+      query,
+      { $set: updatePayload, $setOnInsert: { createdAt: now } },
+      { upsert: true, returnDocument: 'after' }
+    );
+
+    return result as {{pascalCase name}}Document | null; // result.value is deprecated, direct result is the doc
+  }
+
+  // You can add more specific query methods here
+  // Example:
+  // async findByEmail(email: string): Promise<{{pascalCase name}}Document | null> {
+  //   return await this.findOne({ email });
+  // }
+}

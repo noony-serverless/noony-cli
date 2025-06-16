@@ -1,0 +1,11 @@
+// Domain Object for {{pascalCase name}}
+// Represents the core business entity.
+
+export interface {{pascalCase name}} {
+  id?: string; // Typically a string representation of the database ID (e.g., ObjectId.toString())
+  {{#each fields}}
+  {{this.name}}{{#if this.isOptional}}?{{/if}}: {{this.typescriptType}};
+  {{/each}}
+  createdAt?: Date;
+  updatedAt?: Date;
+}

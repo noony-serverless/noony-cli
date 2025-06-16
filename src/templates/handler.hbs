@@ -1,0 +1,37 @@
+import { NoonyHandler } from '../../../../types/noony.types';
+import { logger } from '../../../../utils/logger';
+import { Container } from 'typedi';
+import { {{pascalCase name}}Api } from '../api/{{camelCase name}}Api';
+import { {{pascalCase name}}Dto } from '../dto/{{camelCase name}}.dto';
+
+{{#each methods}}
+export const {{this.methodName}}{{pascalCase ../name}}Handler: NoonyHandler = async (context) => {
+  const { params, body } = context;
+  {{#if this.hasParams}}
+  const {{camelCase ../name}}Id = params.{{camelCase ../name}}Id;
+  logger.info('{{this.methodName}}{{pascalCase ../name}} handler started for ' + {{camelCase ../name}}Id);
+  {{else}}
+  logger.info('{{this.methodName}}{{pascalCase ../name}} handler started');
+  {{/if}}
+
+  const {{camelCase ../name}}Api = Container.get({{pascalCase ../name}}Api);
+  {{#if this.hasBody}}
+  // TODO: Add DTO validation if --validation is passed
+  // const validatedBody = {{pascalCase ../name}}Dto.parse(body);
+  const result = await {{camelCase ../name}}Api.{{this.methodName}}{{pascalCase ../name}}({{#if this.hasParams}}{{camelCase ../name}}Id, {{/if}}body);
+  {{else if this.hasParams}}
+  const result = await {{camelCase ../name}}Api.{{this.methodName}}{{pascalCase ../name}}({{camelCase ../name}}Id);
+  {{else}}
+  const result = await {{camelCase ../name}}Api.{{this.methodName}}{{pascalCase ../name}}();
+  {{/if}}
+
+  return {
+    statusCode: {{this.statusCode}},
+    body: {
+      data: result,
+      message: '{{pascalCase ../name}} {{this.action}} successfully'
+    }
+  };
+};
+
+{{/each}}

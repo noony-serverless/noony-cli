@@ -1,0 +1,84 @@
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { z } from 'zod';
+{{#each methods}}
+import { {{this.handlerName}}{{pascalCase ../name}}Handler } from '../handlers/{{../feature}}/{{kebabCase ../name}}.handlers';
+{{/each}}
+import { {{pascalCase name}}Dto, New{{pascalCase name}}Dto, Update{{pascalCase name}}Dto } from '../handlers/dto/{{camelCase name}}.dto'; // Assuming DTO location
+
+// Define a generic type for the Noony middleware if not already defined globally
+// This is a simplified version. Actual implementation might vary.
+declare module 'fastify' {
+  interface FastifyInstance {
+    noonyMiddleware: (handler: any) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+  }
+}
+
+export async function {{camelCase name}}Routes(fastify: FastifyInstance) {
+  const prefix = '{{prefix}}';
+  const resourcePath = `${prefix}/{{pluralize (kebabCase name)}}`;
+  const resourceIdPath = `${resourcePath}/:{{camelCase name}}Id`;
+
+  {{#each methods}}
+  {{#if (eq this.method "getById")}}
+  // GET {{../name}} by ID
+  fastify.get(resourceIdPath, {
+    schema: {
+      params: z.object({
+        {{camelCase ../name}}Id: z.string()
+      })
+      // TODO: Add response schema: response: { 200: {{pascalCase ../name}}Dto }
+    },
+    handler: (fastify as any).noonyMiddleware({{this.handlerName}}{{pascalCase ../name}}Handler)
+  });
+
+  {{/if}}
+  {{#if (eq this.method "post")}}
+  // POST {{../name}}
+  fastify.post(resourcePath, {
+    schema: {
+      body: New{{pascalCase ../name}}Dto
+      // TODO: Add response schema: response: { 201: {{pascalCase ../name}}Dto }
+    },
+    handler: (fastify as any).noonyMiddleware({{this.handlerName}}{{pascalCase ../name}}Handler)
+  });
+
+  {{/if}}
+  {{#if (eq this.method "put")}}
+  // PUT {{../name}}
+  fastify.put(resourceIdPath, {
+    schema: {
+      params: z.object({
+        {{camelCase ../name}}Id: z.string()
+      }),
+      body: Update{{pascalCase ../name}}Dto // Or {{pascalCase ../name}}Dto.partial()
+      // TODO: Add response schema: response: { 200: {{pascalCase ../name}}Dto }
+    },
+    handler: (fastify as any).noonyMiddleware({{this.handlerName}}{{pascalCase ../name}}Handler)
+  });
+
+  {{/if}}
+  {{#if (eq this.method "delete")}}
+  // DELETE {{../name}}
+  fastify.delete(resourceIdPath, {
+    schema: {
+      params: z.object({
+        {{camelCase ../name}}Id: z.string()
+      })
+      // TODO: Add response schema for successful deletion
+    },
+    handler: (fastify as any).noonyMiddleware({{this.handlerName}}{{pascalCase ../name}}Handler)
+  });
+
+  {{/if}}
+  {{#if (eq this.method "getAll")}}
+  // GET all {{pluralize ../name}}
+  fastify.get(resourcePath, {
+    schema: {
+      // TODO: Add query params for pagination/filtering if needed
+      // TODO: Add response schema: response: { 200: z.array({{pascalCase ../name}}Dto) }
+    },
+    handler: (fastify as any).noonyMiddleware({{this.handlerName}}{{pascalCase ../name}}Handler)
+  });
+  {{/if}}
+  {{/each}}
+}

@@ -1,0 +1,64 @@
+import { z } from 'zod';
+
+// Base schema for {{pascalCase name}}
+const base{{pascalCase name}}Schema = z.object({
+  {{#each fields}}
+  {{this.name}}: {{this.zodType}}{{#if this.isOptional}}.optional(){{/if}},
+  {{/each}}
+});
+
+// Schema for creating a new {{pascalCase name}} (e.g., ID might be optional or not allowed)
+export const New{{pascalCase name}}Dto = base{{pascalCase name}}Schema.omit({ id: true }).extend({
+  // Add specific fields for creation if necessary, or override existing ones
+  // Example: id: z.string().uuid().optional() if you allow client-side ID generation
+  {{#each newDtoFields}}
+  {{this.name}}: {{this.zodType}}{{#if this.isOptional}}.optional(){{/if}},
+  {{/each}}
+});
+
+// Schema for the full {{pascalCase name}} object (e.g., for responses, includes ID)
+export const {{pascalCase name}}Dto = base{{pascalCase name}}Schema.extend({
+  id: z.string(){{#if idIsOptional}}.optional(){{/if}}, // Usually present in responses
+  {{#each mainDtoFields}}
+  {{this.name}}: {{this.zodType}}{{#if this.isOptional}}.optional(){{/if}},
+  {{/each}}
+  createdAt: z.date().optional(), // Common audit field
+  updatedAt: z.date().optional()  // Common audit field
+});
+
+// Schema for updating an existing {{pascalCase name}} (all fields typically optional)
+export const Update{{pascalCase name}}Dto = base{{pascalCase name}}Schema.omit({ id: true }).partial().extend({
+  // Add specific fields for update if necessary
+  {{#each updateDtoFields}}
+  {{this.name}}: {{this.zodType}}{{#if this.isOptional}}.optional(){{/if}},
+  {{/each}}
+});
+
+// Type definitions inferred from schemas
+export type New{{pascalCase name}}RequestType = z.infer<typeof New{{pascalCase name}}Dto>;
+export type {{pascalCase name}}ResponseType = z.infer<typeof {{pascalCase name}}Dto>;
+export type Update{{pascalCase name}}RequestType = z.infer<typeof Update{{pascalCase name}}Dto>;
+
+// Example for nested DTO if --nested is used (manual implementation for now)
+/*
+{{#if options.nested}}
+export const NestedExampleDto = z.object({
+  detail: z.string(),
+  child: New{{pascalCase name}}Dto // Example of nesting
+});
+export type NestedExampleType = z.infer<typeof NestedExampleDto>;
+{{/if}}
+*/
+
+// Example for custom validation if --validation is used (manual implementation for now)
+/*
+{{#if options.validation}}
+export const {{pascalCase name}}WithCustomValidationDto = {{pascalCase name}}Dto.refine(data => {
+  // Add custom validation logic here, e.g., data.field1 === data.field2
+  return true;
+}, {
+  message: "Custom validation failed",
+  path: ["field1", "field2"], // Path to fields causing validation error
+});
+{{/if}}
+*/

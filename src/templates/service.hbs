@@ -1,0 +1,82 @@
+import { Service } from 'typedi';
+import { {{pascalCase name}}Dao, {{pascalCase name}}Document } from '../../infra/db/{{kebabCase name}}.dao';
+import { {{pascalCase name}} } from '../domain/{{kebabCase name}}.do';
+import { ObjectId } from 'mongodb'; // Assuming MongoDB ObjectId will be used in mappers
+
+// Placeholder for logger, adjust path as needed
+// import { logger } from '../../../utils/logger';
+
+@Service()
+export class {{pascalCase name}}Service {
+  constructor(private {{camelCase name}}Dao: {{pascalCase name}}Dao) {}
+
+  {{#if methods.get}}
+  async get{{pascalCase name}}({{camelCase name}}Id: string): Promise<{{pascalCase name}} | null> {
+    // logger.info(`get{{pascalCase name}} service called with id: ${{camelCase name}}Id`);
+    const doc = await this.{{camelCase name}}Dao.findById({{camelCase name}}Id); // Assuming findById exists on DAO
+    return {{camelCase name}}Mapper(doc);
+  }
+  {{/if}}
+
+  {{#if methods.create}}
+  async create{{pascalCase name}}(new{{pascalCase name}}Data: Partial<{{pascalCase name}}>): Promise<{{pascalCase name}}> {
+    // logger.info('create{{pascalCase name}} service called');
+    const docToCreate = {{camelCase name}}ToDocumentMapper(new{{pascalCase name}}Data as {{pascalCase name}});
+    // Remove _id if it's undefined, let MongoDB generate it
+    if (docToCreate._id === undefined) {
+      delete docToCreate._id;
+    }
+    const doc = await this.{{camelCase name}}Dao.insertOne(docToCreate);
+    return {{camelCase name}}Mapper(doc) as {{pascalCase name}}; // Cast needed if insertOne returns with nullable fields not in domain
+  }
+  {{/if}}
+
+  {{#if methods.update}}
+  async update{{pascalCase name}}(
+    {{camelCase name}}Id: string,
+    updateData: Partial<{{pascalCase name}}>
+  ): Promise<{{pascalCase name}} | null> {
+    // logger.info(`update{{pascalCase name}} service called with id: ${{camelCase name}}Id`);
+    const docUpdate = {{camelCase name}}ToDocumentMapper(updateData as {{pascalCase name}});
+    // Ensure not to overwrite createdAt, handle updatedAt
+    delete docUpdate.createdAt;
+    docUpdate.updatedAt = new Date();
+    const doc = await this.{{camelCase name}}Dao.updateById({{camelCase name}}Id, docUpdate); // Assuming updateById exists
+    return {{camelCase name}}Mapper(doc);
+  }
+  {{/if}}
+
+  {{#if methods.delete}}
+  async delete{{pascalCase name}}({{camelCase name}}Id: string): Promise<boolean> {
+    // logger.info(`delete{{pascalCase name}} service called with id: ${{camelCase name}}Id`);
+    const result = await this.{{camelCase name}}Dao.deleteById({{camelCase name}}Id); // Assuming deleteById exists
+    return result; // Assuming deleteById returns boolean
+  }
+  {{/if}}
+}
+
+// Mappers
+// TODO: These are basic mappers. Users will need to customize them.
+export const {{camelCase name}}Mapper = (doc: {{pascalCase name}}Document | null): {{pascalCase name}} | null => {
+  if (!doc) return null;
+
+  const { _id, createdAt, updatedAt, ...rest } = doc;
+
+  return {
+    id: _id?.toString(),
+    ...rest, // Spread remaining fields
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  } as {{pascalCase name}}; // May need assertion if domain has non-optional fields not in DB
+};
+
+export const {{camelCase name}}ToDocumentMapper = ({{camelCase name}}Data: {{pascalCase name}}): Partial<{{pascalCase name}}Document> => {
+  const { id, ...rest } = {{camelCase name}}Data;
+  const doc: Partial<{{pascalCase name}}Document> = {
+    ...rest,
+  };
+  if (id) {
+    doc._id = new ObjectId(id);
+  }
+  return doc;
+};
