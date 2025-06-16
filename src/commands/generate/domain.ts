@@ -4,6 +4,8 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { toPascalCase, toKebabCase, toCamelCase } from '../../utils/stringUtils';
 import { parseSchemaFields, ParsedField } from '../../utils/schemaParser';
+import { getSrcPath } from '../../utils/configLoader';
+import { getTemplateContent } from '../../utils/templateManager';
 
 interface DomainOptions {
   fields?: string;
@@ -24,8 +26,7 @@ export function generateDomain(name: string, options: DomainOptions) {
   const allFields = parseSchemaFields(options.fields);
   const regularFields = allFields.filter(f => !f.isIdField); // Exclude 'id' field from explicit generation
 
-  const templatePath = path.join(__dirname, '../../templates/domain.hbs');
-  const templateContent = fs.readFileSync(templatePath, 'utf-8');
+  const templateContent = getTemplateContent('domain', 'domain.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
 
   const content = compiledTemplate({
@@ -34,7 +35,7 @@ export function generateDomain(name: string, options: DomainOptions) {
     fields: regularFields, // Pass only fields other than 'id', 'createdAt', 'updatedAt'
   });
 
-  const targetDir = path.join(process.cwd(), 'src', 'chrome', 'domain');
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'domain');
   const targetFilePath = path.join(targetDir, `${kebabCaseName}.do.ts`);
 
   fs.ensureDirSync(targetDir);

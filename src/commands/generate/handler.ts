@@ -3,6 +3,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { toPascalCase, toCamelCase, toKebabCase } from '../../utils/stringUtils'; // Adjust path as needed
+import { getSrcPath } from '../../utils/configLoader';
+import { getTemplateContent } from '../../utils/templateManager';
 
 interface HandlerOptions {
   methods?: string;
@@ -56,7 +58,7 @@ export function generateHandler(name: string, options: HandlerOptions) {
     // TODO: Add validation and auth options to template context
   });
 
-  const targetDir = path.join(process.cwd(), 'src', 'chrome', 'handlers', feature);
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', feature);
   const targetFilePath = path.join(targetDir, `${toKebabCase(name)}.handlers.ts`);
 
   fs.ensureDirSync(targetDir);
@@ -65,25 +67,25 @@ export function generateHandler(name: string, options: HandlerOptions) {
   console.log(`Handler generated: ${targetFilePath}`);
   // TODO: Create dummy files for Api and Dto if they don't exist to allow compilation
   // This is a temporary measure for development
-  const apiDir = path.join(process.cwd(), 'src', 'chrome', 'handlers', 'api');
+  const apiDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', 'api');
   fs.ensureDirSync(apiDir);
-  const apiPath = path.join(apiDir, `${camelCaseName}Api.ts`);
+  const apiPath = path.join(apiDir, `${pascalCaseName}Api.ts`); // Corrected from camelCaseName to pascalCaseName for API file
   if (!fs.existsSync(apiPath)) {
     fs.writeFileSync(apiPath, `// Placeholder for ${pascalCaseName}Api
 export class ${pascalCaseName}Api {}
 `);
   }
 
-  const dtoDir = path.join(process.cwd(), 'src', 'chrome', 'handlers', 'dto');
+  const dtoDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', 'dto');
   fs.ensureDirSync(dtoDir);
-  const dtoPath = path.join(dtoDir, `${camelCaseName}.dto.ts`);
+  const dtoPath = path.join(dtoDir, `${toKebabCase(name)}.dto.ts`); // Corrected from camelCaseName to toKebabCase(name) for DTO file
   if (!fs.existsSync(dtoPath)) {
     fs.writeFileSync(dtoPath, `// Placeholder for ${pascalCaseName}Dto
 export class ${pascalCaseName}Dto {}
 `);
   }
 
-  const typesDir = path.join(process.cwd(), 'src', 'types');
+  const typesDir = path.join(process.cwd(), getSrcPath(), 'types');
   fs.ensureDirSync(typesDir);
   const noonyTypesPath = path.join(typesDir, 'noony.types.ts');
   if(!fs.existsSync(noonyTypesPath)) {
@@ -92,7 +94,7 @@ export type NoonyHandler = (context: any) => Promise<any>;
 ");
   }
 
-  const utilsDir = path.join(process.cwd(), 'src', 'utils');
+  const utilsDir = path.join(process.cwd(), getSrcPath(), 'utils');
   fs.ensureDirSync(utilsDir);
   const loggerPath = path.join(utilsDir, 'logger.ts');
   if(!fs.existsSync(loggerPath)) {

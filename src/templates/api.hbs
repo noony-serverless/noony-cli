@@ -1,0 +1,47 @@
+import { Service } from 'typedi';
+import { {{pascalCase name}}Service } from '../../services/{{pascalCase name}}Service'; // Adjusted path
+import { {{pascalCase name}} } from '../../domain/{{kebabCase name}}.do'; // Adjusted path
+// import { logger } from '../../../../utils/logger'; // Optional logger
+
+@Service()
+export class {{pascalCase name}}Api {
+  constructor(private {{camelCase name}}Service: {{pascalCase name}}Service) {}
+
+  {{#if methods.get}}
+  async get{{pascalCase name}}({{camelCase name}}Id: string): Promise<{{pascalCase name}} | null> {
+    // logger.info(`API: get{{pascalCase name}} called with id: ${{camelCase name}}Id`);
+    return await this.{{camelCase name}}Service.get{{pascalCase name}}({{camelCase name}}Id);
+  }
+  {{/if}}
+
+  {{#if methods.create}}
+  async create{{pascalCase name}}(data: Partial<{{pascalCase name}}>): Promise<{{pascalCase name}}> {
+    // logger.info('API: create{{pascalCase name}} called');
+    // The 'as {{pascalCase name}}' cast might be needed if the service expects a full domain object
+    // or if 'data' doesn't perfectly match. Consider using a DTO for 'data' type.
+    return await this.{{camelCase name}}Service.create{{pascalCase name}}(data as {{pascalCase name}});
+  }
+  {{/if}}
+
+  {{#if methods.update}}
+  async update{{pascalCase name}}({{camelCase name}}Id: string, data: Partial<{{pascalCase name}}>): Promise<{{pascalCase name}} | null> {
+    // logger.info(`API: update{{pascalCase name}} called with id: ${{camelCase name}}Id`);
+    return await this.{{camelCase name}}Service.update{{pascalCase name}}({{camelCase name}}Id, data);
+  }
+  {{/if}}
+
+  {{#if methods.delete}}
+  async delete{{pascalCase name}}({{camelCase name}}Id: string): Promise<boolean> {
+    // logger.info(`API: delete{{pascalCase name}} called with id: ${{camelCase name}}Id`);
+    return await this.{{camelCase name}}Service.delete{{pascalCase name}}({{camelCase name}}Id);
+  }
+  {{/if}}
+
+  {{#if methods.getAll}}
+  async getAll{{pascalCase name}}s(queryParams?: any): Promise<{{pascalCase name}}[]> { // Added 's' for plural
+    // logger.info('API: getAll{{pascalCase name}}s called');
+    // TODO: Define actual queryParams type and pass to service if service supports it
+    return await this.{{camelCase name}}Service.getAll{{pascalCase name}}s(queryParams);
+  }
+  {{/if}}
+}

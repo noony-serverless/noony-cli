@@ -1,0 +1,52 @@
+// Step definitions for {{pascalCase name}}.feature
+import { Given, When, Then, BeforeAll, AfterAll, setDefaultTimeout } from '@cucumber/cucumber';
+import assert from 'assert';
+
+// import { FastifyInstance } from 'fastify'; // Example: If testing against live server
+// import { build } from '../../../../app'; // Example: Your app builder
+
+setDefaultTimeout(60 * 1000); // Set default timeout for steps
+
+// let app: FastifyInstance; // Example: Your Fastify app instance for testing
+
+BeforeAll(async () => {
+  // Example: Initialize your Fastify app for testing
+  // app = await build();
+  // await app.ready();
+  console.log('E2E tests starting for {{pascalCase name}} feature...');
+  // TODO: Initialize database, seed data, other global setup
+});
+
+AfterAll(async () => {
+  // Example: Close your Fastify app
+  // await app.close();
+  console.log('E2E tests finished for {{pascalCase name}} feature.');
+  // TODO: Clean up database, resources, other global teardown
+});
+
+// This is a placeholder context type. Define more specifically if needed.
+// interface ITestContext {
+//   [key: string]: any;
+// }
+
+Given('a precondition for {{lowerCase name}}', async function (/*this: ITestContext*/) {
+  // TODO: Implement this step
+  console.log('Executing: Given a precondition for {{lowerCase name}}');
+  // Example: this.someValue = 'preconditionMet';
+});
+
+When('an action happens', async function (/*this: ITestContext*/) {
+  // TODO: Implement this step
+  console.log('Executing: When an action happens');
+  // Example: this.result = await someAction(this.someValue);
+  this.actionResult = { statusCode: 200, body: { message: 'Action successful' } }; // Placeholder
+});
+
+Then('a result is expected', async function (/*this: ITestContext*/) {
+  // TODO: Implement this step
+  console.log('Executing: Then a result is expected');
+  // Example: assert.strictEqual(this.actionResult.statusCode, 200);
+  assert.ok(this.actionResult, 'Action result should exist');
+});
+
+// Add more step definitions here to match scenarios in {{kebabCase name}}.feature

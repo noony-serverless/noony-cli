@@ -3,6 +3,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { toPascalCase, toCamelCase, toKebabCase, pluralize } from '../../utils/stringUtils';
+import { getSrcPath, getApiPrefix } from '../../utils/configLoader';
+import { getTemplateContent } from '../../utils/templateManager';
 
 interface RouteOptions {
   prefix?: string;
@@ -45,8 +47,7 @@ export function generateRoute(name: string, options: RouteOptions) {
     methodsToGenerate = (options.methods || defaultMethods).split(',').map(m => m.trim().toLowerCase());
   }
 
-  const templatePath = path.join(__dirname, '../../templates/route.hbs');
-  const templateContent = fs.readFileSync(templatePath, 'utf-8');
+  const templateContent = getTemplateContent('route', 'route.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
 
   const templateMethods = methodsToGenerate.map(methodKey => {
@@ -68,12 +69,12 @@ export function generateRoute(name: string, options: RouteOptions) {
     camelCaseName,
     kebabCaseName,
     feature, // Used to locate handlers
-    prefix: options.prefix || '/v1',
+    prefix: options.prefix || getApiPrefix(),
     methods: templateMethods,
     // TODO: Add auth options to template context
   });
 
-  const targetDir = path.join(process.cwd(), 'src', 'chrome', 'routes');
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'routes');
   const targetFilePath = path.join(targetDir, `${kebabCaseName}.route.ts`);
 
   fs.ensureDirSync(targetDir);
@@ -82,9 +83,9 @@ export function generateRoute(name: string, options: RouteOptions) {
   console.log(`Route generated: ${targetFilePath}`);
 
   // Create dummy DTO file if it doesn't exist (similar to handler generation)
-  const dtoDir = path.join(process.cwd(), 'src', 'chrome', 'handlers', 'dto');
+  const dtoDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', 'dto');
   fs.ensureDirSync(dtoDir);
-  const dtoPath = path.join(dtoDir, `${camelCaseName}.dto.ts`);
+  const dtoPath = path.join(dtoDir, `${toKebabCase(name)}.dto.ts`); // Corrected to use kebabCaseName
   if (!fs.existsSync(dtoPath)) {
     fs.writeFileSync(dtoPath, `
 // Placeholder for ${pascalCaseName}Dto
@@ -95,7 +96,7 @@ export const Update${pascalCaseName}Dto = z.object({});
 `);
   }
   // Create dummy Handler files if they don't exist
-  const handlerDir = path.join(process.cwd(), 'src', 'chrome', 'handlers', feature);
+  const handlerDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', feature);
   fs.ensureDirSync(handlerDir);
   const handlerFilePath = path.join(handlerDir, `${kebabCaseName}.handlers.ts`);
   if (!fs.existsSync(handlerFilePath)) {
@@ -118,7 +119,7 @@ export function registerGenerateRouteCommand(program: Command) {
     .command('route <name>')
     .alias('r')
     .description('Generate a new route')
-    .option('-p, --prefix <path>', 'API versioning prefix', '/v1')
+    .option('-p, --prefix <path>', 'API versioning prefix', getApiPrefix())
     .option('-m, --methods <methods>', 'Comma-separated list of HTTP methods (getById,post,put,delete,getAll)')
     .option('--resource', 'Generate RESTful resource routes (implies all CRUD methods)')
     .option('--auth <type>', 'Add authentication middleware (Not yet implemented)')

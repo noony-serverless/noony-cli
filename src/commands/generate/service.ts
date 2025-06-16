@@ -3,6 +3,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { toPascalCase, toCamelCase, toKebabCase } from '../../utils/stringUtils';
+import { getSrcPath } from '../../utils/configLoader';
+import { getTemplateContent } from '../../utils/templateManager';
 
 interface ServiceOptions {
   dao?: boolean;
@@ -30,8 +32,7 @@ export function generateService(name: string, options: ServiceOptions) {
     delete: methodsArg.includes('delete'),
   };
 
-  const templatePath = path.join(__dirname, '../../templates/service.hbs');
-  const templateContent = fs.readFileSync(templatePath, 'utf-8');
+  const templateContent = getTemplateContent('service', 'service.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
 
   const content = compiledTemplate({
@@ -43,7 +44,7 @@ export function generateService(name: string, options: ServiceOptions) {
     // registration: options.registration || 'auto', // For future use if template needs to adapt
   });
 
-  const targetDir = path.join(process.cwd(), 'src', 'chrome', 'services');
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'services');
   const targetFilePath = path.join(targetDir, `${pascalCaseName}Service.ts`);
 
   fs.ensureDirSync(targetDir);
@@ -59,7 +60,7 @@ NOTE: Manual registration selected. Please update your TypeDI container configur
   // Create placeholder DAO file if --dao is specified or by default, and if it doesn't exist
   // This helps the service compile. Actual DAO generation is a separate step.
   // For now, always create if it doesn't exist as service depends on it.
-  const daoDir = path.join(process.cwd(), 'src', 'infra', 'db');
+  const daoDir = path.join(process.cwd(), getSrcPath(), 'infra', 'db');
   fs.ensureDirSync(daoDir);
   const daoPath = path.join(daoDir, `${kebabCaseName}.dao.ts`);
   if (!fs.existsSync(daoPath)) {
@@ -85,7 +86,8 @@ export class ${pascalCaseName}Dao extends MongoDao<${pascalCaseName}Document> {
 }
 
 // mongo.dao.ts placeholder
-const mongoDaoPath = path.join(daoDir, 'mongo.dao.ts');
+// Ensure this path is also relative to getSrcPath() if infra is within srcPath
+const mongoDaoPath = path.join(process.cwd(), getSrcPath(), 'infra', 'db', 'mongo.dao.ts');
 if (!fs.existsSync(mongoDaoPath)) {
     fs.writeFileSync(mongoDaoPath, \`
 import { z } from 'zod';
@@ -108,7 +110,8 @@ export abstract class MongoDao<T extends { _id?: ObjectId }> {
 }
 
 // mongodb-connect-service.ts placeholder
-const mongoConnectServicePath = path.join(daoDir, 'mongodb-connect-service.ts');
+// Ensure this path is also relative to getSrcPath() if infra is within srcPath
+const mongoConnectServicePath = path.join(process.cwd(), getSrcPath(), 'infra', 'db', 'mongodb-connect-service.ts');
 if (!fs.existsSync(mongoConnectServicePath)) {
     fs.writeFileSync(mongoConnectServicePath, \`
 import { Service } from 'typedi';
@@ -123,7 +126,7 @@ export class MongodbConnectService {
 `);
   }
   // Create placeholder Domain Object file if it doesn't exist
-  const domainDir = path.join(process.cwd(), 'src', 'chrome', 'domain');
+  const domainDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'domain');
   fs.ensureDirSync(domainDir);
   const domainPath = path.join(domainDir, `${kebabCaseName}.do.ts`);
   if (!fs.existsSync(domainPath)) {
