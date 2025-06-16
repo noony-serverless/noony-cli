@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import * as path from 'path';
-import * as fs from 'fs-extra'; // To check existence if needed, or for future dynamic loading
+// import * as path from 'path';
+// import * as fs from 'fs-extra'; // To check existence if needed, or for future dynamic loading
 
 interface TemplateInfo {
   name: string;
@@ -15,7 +15,8 @@ interface TemplateInfo {
 const builtInTemplates: TemplateInfo[] = [
   {
     name: 'Handler',
-    description: 'Generates a Noony request handler file with specified methods.',
+    description:
+      'Generates a Noony request handler file with specified methods.',
     filePath: 'src/templates/handler.hbs',
   },
   {
@@ -25,7 +26,8 @@ const builtInTemplates: TemplateInfo[] = [
   },
   {
     name: 'Service',
-    description: 'Generates a service class with TypeDI integration and mappers.',
+    description:
+      'Generates a service class with TypeDI integration and mappers.',
     filePath: 'src/templates/service.hbs',
   },
   {
@@ -66,13 +68,13 @@ const builtInTemplates: TemplateInfo[] = [
   // Add other templates as they are created
 ];
 
-export function listTemplates(options: any) {
+export function listTemplates(_options: any) {
   console.log(`
 📦 Available Built-in Templates:`);
-  console.log("--------------------------------");
+  console.log('--------------------------------');
 
   if (builtInTemplates.length === 0) {
-    console.log("No built-in templates defined yet.");
+    console.log('No built-in templates defined yet.');
   } else {
     builtInTemplates.forEach(template => {
       // Check if template file actually exists before listing (optional, good for robustness)
@@ -89,18 +91,23 @@ export function listTemplates(options: any) {
       // }
     });
   }
-  console.log("--------------------------------");
+  console.log('--------------------------------');
   // TODO: Future enhancement - Discover and list custom templates from .noonyrc.json
   console.log(`
 ℹ️  Note: Custom template listing will be available after .noonyrc.json configuration is implemented.`);
 }
 
 export function registerListTemplatesCommand(program: Command) {
-  const listCommand = program.command('list').alias('ls').description('List available Noony items.');
+  const listCommand = program
+    .command('list')
+    .alias('ls')
+    .description('List available Noony items.');
 
   listCommand
     .command('templates')
     .alias('t')
-    .description('Shows available built-in templates and their customization options.')
+    .description(
+      'Shows available built-in templates and their customization options.'
+    )
     .action(listTemplates);
 }

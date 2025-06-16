@@ -2,7 +2,12 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import { toPascalCase, toCamelCase, toKebabCase, pluralize } from '../../utils/stringUtils';
+import {
+  toPascalCase,
+  toCamelCase,
+  toKebabCase,
+  pluralize,
+} from '../../utils/stringUtils';
 import { parseSchemaFields } from '../../utils/schemaParser';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
@@ -26,8 +31,8 @@ export function generateDao(name: string, options: DaoOptions) {
   // Default identifier to 'id', which will be mapped to '_id' in ObjectId context
   const identifierField = options.identifier || 'id';
   // If identifier is 'id', treat it as '_id' for MongoDB context in template
-  const templateIdentifier = identifierField.toLowerCase() === 'id' ? '_id' : identifierField;
-
+  const templateIdentifier =
+    identifierField.toLowerCase() === 'id' ? '_id' : identifierField;
 
   const templateContent = getTemplateContent('dao', 'dao.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
@@ -51,7 +56,9 @@ export function generateDao(name: string, options: DaoOptions) {
   // Ensure mongo.dao.ts and mongodb-connect-service.ts exist (placeholders)
   const mongoDaoPath = path.join(targetDir, 'mongo.dao.ts');
   if (!fs.existsSync(mongoDaoPath)) {
-    fs.writeFileSync(mongoDaoPath, `
+    fs.writeFileSync(
+      mongoDaoPath,
+      `
 // Placeholder for base MongoDao
 import { z } from 'zod';
 import { Collection, Db, ObjectId, Filter, FindOptions, UpdateFilter, UpdateOptions } from 'mongodb';
@@ -107,12 +114,18 @@ export abstract class MongoDao<TDocument extends { _id?: ObjectId }> {
     return result.deletedCount === 1;
   }
 }
-`);
+`
+    );
   }
 
-  const mongoConnectServicePath = path.join(targetDir, 'mongodb-connect-service.ts');
+  const mongoConnectServicePath = path.join(
+    targetDir,
+    'mongodb-connect-service.ts'
+  );
   if (!fs.existsSync(mongoConnectServicePath)) {
-    fs.writeFileSync(mongoConnectServicePath, `
+    fs.writeFileSync(
+      mongoConnectServicePath,
+      `
 // Placeholder for MongodbConnectService
 import { Service } from 'typedi';
 import { MongoClient, Db } from 'mongodb';
@@ -141,7 +154,8 @@ export class MongodbConnectService {
     // console.log('Disconnected from MongoDB.');
   }
 }
-`);
+`
+    );
   }
 }
 
@@ -150,8 +164,18 @@ export function registerGenerateDaoCommand(program: Command) {
     .command('dao <name>')
     .alias('d')
     .description('Generate a new MongoDB DAO with Zod schema')
-    .option('-c, --collection <name>', 'MongoDB collection name (defaults to pluralized kebab-case name)')
-    .option('-s, --schema-fields <fields>', 'Comma-separated list of schema fields (e.g., "name:string,email:string,age?:number,isActive:boolean,birthDate:date,refId:objectId")')
-    .option('-i, --identifier <field>', 'Primary identifier field for find/upsert methods (defaults to "id", maps to "_id")', 'id')
+    .option(
+      '-c, --collection <name>',
+      'MongoDB collection name (defaults to pluralized kebab-case name)'
+    )
+    .option(
+      '-s, --schema-fields <fields>',
+      'Comma-separated list of schema fields (e.g., "name:string,email:string,age?:number,isActive:boolean,birthDate:date,refId:objectId")'
+    )
+    .option(
+      '-i, --identifier <field>',
+      'Primary identifier field for find/upsert methods (defaults to "id", maps to "_id")',
+      'id'
+    )
     .action(generateDao);
 }

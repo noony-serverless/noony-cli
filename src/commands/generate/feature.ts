@@ -43,7 +43,7 @@ interface FeatureOptions {
   skipRoutes?: boolean;
   skipTests?: boolean;
   skipUnitTests?: boolean; // More granular test skip
-  skipE2eTests?: boolean;  // More granular test skip
+  skipE2eTests?: boolean; // More granular test skip
 }
 
 const defaultCrudMethods = 'get,post,put,delete,getAll';
@@ -83,7 +83,7 @@ DAO for ${name}...`);
     generateDao(name, {
       schemaFields: options.daoSchemaFields || fieldsToUse,
       collection: options.collection,
-      identifier: options.daoIdentifier
+      identifier: options.daoIdentifier,
     });
   } else {
     console.log(`
@@ -96,7 +96,7 @@ Skipping DAO for ${name}.`);
 Service for ${name}...`);
     generateService(name, {
       methods: methodsToUse,
-      dao: true // Assume DAO is related
+      dao: true, // Assume DAO is related
     });
   } else {
     console.log(`
@@ -120,7 +120,7 @@ Handlers for ${name}...`);
     generateHandler(name, {
       methods: methodsToUse,
       feature: featureNameForGroup,
-      auth: options.auth
+      auth: options.auth,
       // validation: true // Consider if a global validation flag is needed
     });
   } else {
@@ -136,7 +136,7 @@ Routes for ${name}...`);
       methods: methodsToUse,
       prefix: options.routePrefix,
       feature: featureNameForGroup, // To link to correct handlers
-      auth: options.auth
+      auth: options.auth,
       // resource: true // Could be an option, for now methods drive it
     });
   } else {
@@ -152,7 +152,7 @@ Unit Tests for ${name} Handlers...`);
       generateTest('handler', name, {
         unit: true,
         feature: featureNameForGroup,
-        methods: methodsToUse
+        methods: methodsToUse,
       });
       // TODO: Add unit tests for services, DAOs too if desired
     } else {
@@ -175,22 +175,47 @@ Skipping all Tests for ${name}.`);
 
   console.log('------------------------------------------');
   console.log(`✅ Feature generation for ${name} complete!`);
-  console.log("Remember to install dependencies and check generated files for TODOs or customizations.");
+  console.log(
+    'Remember to install dependencies and check generated files for TODOs or customizations.'
+  );
 }
 
 export function registerGenerateFeatureCommand(program: Command) {
   program
     .command('feature <name>')
     .alias('gf')
-    .description('Generate a complete feature (domain, DTO, DAO, service, API, handlers, routes, tests)')
-    .option('-f, --fields <fields>', 'Comma-separated fields for Domain, DTO, and potentially DAO (e.g., "title:string,completed?:boolean")')
-    .option('--dao-schema-fields <fields>', 'Specific comma-separated fields for DAO schema (if different from --fields)')
+    .description(
+      'Generate a complete feature (domain, DTO, DAO, service, API, handlers, routes, tests)'
+    )
+    .option(
+      '-f, --fields <fields>',
+      'Comma-separated fields for Domain, DTO, and potentially DAO (e.g., "title:string,completed?:boolean")'
+    )
+    .option(
+      '--dao-schema-fields <fields>',
+      'Specific comma-separated fields for DAO schema (if different from --fields)'
+    )
     .option('--collection <name>', 'MongoDB collection name for DAO')
-    .option('--dao-identifier <field>', 'Primary identifier for DAO methods (default: id)')
-    .option('-m, --crud-methods <methods>', `Comma-separated CRUD methods (default: "${defaultCrudMethods}")`)
-    .option('--route-prefix <prefix>', 'Prefix for API routes (e.g., /v1, default is /v1 from route generator)')
-    .option('--feature-group-name <group>', 'Specific feature group name for handler/test paths (defaults to kebab-case of <name>)')
-    .option('--auth <type>', 'Authentication type for handlers/routes (e.g., api-key, bearer - for future use by underlying generators)')
+    .option(
+      '--dao-identifier <field>',
+      'Primary identifier for DAO methods (default: id)'
+    )
+    .option(
+      '-m, --crud-methods <methods>',
+      `Comma-separated CRUD methods (default: "${defaultCrudMethods}")`
+    )
+    .option(
+      '--route-prefix <prefix>',
+      'Prefix for API routes (e.g., /v1, default is /v1 from route generator)'
+    )
+    .option(
+      '--feature-group-name <group>',
+      'Specific feature group name for handler/test paths (defaults to kebab-case of <name>)'
+    )
+    .option(
+      '--auth <type>',
+      'Authentication type for handlers/routes (e.g., api-key, bearer - for future use by underlying generators)'
+    )
     .option('--skip-domain', 'Skip Domain Object generation')
     .option('--skip-dto', 'Skip DTO generation')
     .option('--skip-dao', 'Skip DAO generation')
@@ -199,7 +224,13 @@ export function registerGenerateFeatureCommand(program: Command) {
     .option('--skip-handlers', 'Skip Handlers generation')
     .option('--skip-routes', 'Skip Routes generation')
     .option('--skip-tests', 'Skip all Test generation')
-    .option('--skip-unit-tests', 'Skip Unit Test generation (if --skip-tests is not used)')
-    .option('--skip-e2e-tests', 'Skip E2E Test generation (if --skip-tests is not used)')
+    .option(
+      '--skip-unit-tests',
+      'Skip Unit Test generation (if --skip-tests is not used)'
+    )
+    .option(
+      '--skip-e2e-tests',
+      'Skip E2E Test generation (if --skip-tests is not used)'
+    )
     .action(generateFeature);
 }

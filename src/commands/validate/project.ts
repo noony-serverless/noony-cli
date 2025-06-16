@@ -10,44 +10,70 @@ interface ValidationResult {
   details?: string;
 }
 
-async function checkFileExists(filePath: string, checkName: string, importance: 'must' | 'should' = 'must'): Promise<ValidationResult> {
+async function checkFileExists(
+  filePath: string,
+  checkName: string,
+  importance: 'must' | 'should' = 'must'
+): Promise<ValidationResult> {
   const fullPath = path.join(process.cwd(), filePath);
   const exists = await fs.pathExists(fullPath);
   if (exists) {
-    return { check: checkName, status: '✅ PASSED', message: `${filePath} exists.` };
+    return {
+      check: checkName,
+      status: '✅ PASSED',
+      message: `${filePath} exists.`,
+    };
   } else {
     return {
       check: checkName,
       status: importance === 'must' ? '❌ FAILED' : '⚠️ WARNING',
-      message: `${filePath} does not exist.`
+      message: `${filePath} does not exist.`,
     };
   }
 }
 
-async function checkDirectoryExists(dirPath: string, checkName: string, importance: 'must' | 'should' = 'must'): Promise<ValidationResult> {
+async function checkDirectoryExists(
+  dirPath: string,
+  checkName: string,
+  importance: 'must' | 'should' = 'must'
+): Promise<ValidationResult> {
   // Similar to checkFileExists, but for directories
   return checkFileExists(dirPath, checkName, importance);
 }
 
 async function checkHandlerNamingConvention(): Promise<ValidationResult> {
   const checkName = 'Handler Naming Convention';
-  const handlersBasePath = path.join(process.cwd(), 'src', 'chrome', 'handlers');
-  if (!await fs.pathExists(handlersBasePath)) {
-    return { check: checkName, status: '⚠️ WARNING', message: 'No src/chrome/handlers directory found to check conventions.' };
+  const handlersBasePath = path.join(
+    process.cwd(),
+    'src',
+    'chrome',
+    'handlers'
+  );
+  if (!(await fs.pathExists(handlersBasePath))) {
+    return {
+      check: checkName,
+      status: '⚠️ WARNING',
+      message: 'No src/chrome/handlers directory found to check conventions.',
+    };
   }
 
   // Find all files that might be handlers, then check their names.
   // This is a simplified check. A real check would be more sophisticated.
   const files = await glob('**/*.ts', { cwd: handlersBasePath });
-  let incorrectFiles: string[] = [];
+  // const incorrectFiles: string[] = [];
   files.forEach((file: string) => {
     if (file.endsWith('.handlers.ts') || file.endsWith('.handler.ts')) {
       // Potentially correct by our convention
-    } else if (file.endsWith('.ts') && !file.endsWith('.test.ts') && !file.endsWith('.spec.ts')) {
+    } else if (
+      file.endsWith('.ts') &&
+      !file.endsWith('.test.ts') &&
+      !file.endsWith('.spec.ts')
+    ) {
       // Could be a handler not following the convention
       // For this basic check, let's assume any .ts file not ending in .handlers.ts is a "warning"
       // if it's not a test file. This is very naive.
-      if (!file.includes('/') && !file.startsWith('.')) { // Only top-level files in a feature for this naive check
+      if (!file.includes('/') && !file.startsWith('.')) {
+        // Only top-level files in a feature for this naive check
         // This check is too broad, let's refine it or make it more specific
       }
     }
@@ -58,44 +84,89 @@ async function checkHandlerNamingConvention(): Promise<ValidationResult> {
   const pattern = path.join(handlersBasePath, '*', '*.ts').replace(/\\/g, '/'); // platform-agnostic glob
   const allHandlerDirFiles = await glob(pattern);
 
-  let nonConformingHandlers: string[] = [];
+  const nonConformingHandlers: string[] = [];
   for (const file of allHandlerDirFiles) {
-     const baseName = path.basename(file);
-     if (!baseName.endsWith('.handlers.ts') && !baseName.endsWith('.test.ts') && !baseName.endsWith('.spec.ts')) {
-         nonConformingHandlers.push(path.relative(process.cwd(), file));
-     }
+    const baseName = path.basename(file);
+    if (
+      !baseName.endsWith('.handlers.ts') &&
+      !baseName.endsWith('.test.ts') &&
+      !baseName.endsWith('.spec.ts')
+    ) {
+      nonConformingHandlers.push(path.relative(process.cwd(), file));
+    }
   }
 
   if (nonConformingHandlers.length > 0) {
     return {
       check: checkName,
       status: '⚠️ WARNING',
-      message: 'Some files in handler directories might not follow the *.handlers.ts convention.',
-      details: `Files: ${nonConformingHandlers.join(', ')}`
+      message:
+        'Some files in handler directories might not follow the *.handlers.ts convention.',
+      details: `Files: ${nonConformingHandlers.join(', ')}`,
     };
   }
 
-  return { check: checkName, status: '✅ PASSED', message: 'Handler files seem to follow basic naming convention (*.handlers.ts).' };
+  return {
+    check: checkName,
+    status: '✅ PASSED',
+    message:
+      'Handler files seem to follow basic naming convention (*.handlers.ts).',
+  };
 }
 
-
-export async function validateProject(options: any) {
+export async function validateProject(_options: any) {
   console.log(`
 🔍 Validating project structure and conventions...`);
-  console.log("-------------------------------------------------");
+  console.log('-------------------------------------------------');
 
   const results: ValidationResult[] = [];
 
   results.push(await checkFileExists('package.json', 'package.json Presence'));
-  results.push(await checkFileExists('tsconfig.json', 'tsconfig.json Presence'));
+  results.push(
+    await checkFileExists('tsconfig.json', 'tsconfig.json Presence')
+  );
   results.push(await checkDirectoryExists('src', 'src Directory Presence'));
-  results.push(await checkDirectoryExists('src/chrome', 'src/chrome Directory Presence', 'should'));
-  results.push(await checkDirectoryExists('src/chrome/handlers', 'src/chrome/handlers Directory', 'should'));
-  results.push(await checkDirectoryExists('src/chrome/services', 'src/chrome/services Directory', 'should'));
-  results.push(await checkDirectoryExists('src/chrome/domain', 'src/chrome/domain Directory', 'should'));
-  results.push(await checkDirectoryExists('src/infra', 'src/infra Directory', 'should'));
-  results.push(await checkDirectoryExists('src/infra/db', 'src/infra/db Directory', 'should'));
-  results.push(await checkDirectoryExists('tests', 'tests Directory Presence', 'should'));
+  results.push(
+    await checkDirectoryExists(
+      'src/chrome',
+      'src/chrome Directory Presence',
+      'should'
+    )
+  );
+  results.push(
+    await checkDirectoryExists(
+      'src/chrome/handlers',
+      'src/chrome/handlers Directory',
+      'should'
+    )
+  );
+  results.push(
+    await checkDirectoryExists(
+      'src/chrome/services',
+      'src/chrome/services Directory',
+      'should'
+    )
+  );
+  results.push(
+    await checkDirectoryExists(
+      'src/chrome/domain',
+      'src/chrome/domain Directory',
+      'should'
+    )
+  );
+  results.push(
+    await checkDirectoryExists('src/infra', 'src/infra Directory', 'should')
+  );
+  results.push(
+    await checkDirectoryExists(
+      'src/infra/db',
+      'src/infra/db Directory',
+      'should'
+    )
+  );
+  results.push(
+    await checkDirectoryExists('tests', 'tests Directory Presence', 'should')
+  );
 
   // Naming convention check (very basic)
   results.push(await checkHandlerNamingConvention());
@@ -119,11 +190,13 @@ Validation Results:`);
     }
   });
 
-  console.log("-------------------------------------------------");
+  console.log('-------------------------------------------------');
   if (issuesFound === 0) {
-    console.log("🎉 Project validation completed. No major issues found!");
+    console.log('🎉 Project validation completed. No major issues found!');
   } else {
-    console.log(`Project validation completed. Found ${issuesFound} potential issue(s).`);
+    console.log(
+      `Project validation completed. Found ${issuesFound} potential issue(s).`
+    );
   }
 }
 
@@ -131,7 +204,9 @@ export function registerValidateCommand(program: Command) {
   program
     .command('validate')
     .aliases(['v', 'check'])
-    .description('Validates existing project structure and identifies inconsistencies.')
+    .description(
+      'Validates existing project structure and identifies inconsistencies.'
+    )
     // .option('-s, --strict', 'Enable stricter validation checks') // Future option
     .action(validateProject);
 }

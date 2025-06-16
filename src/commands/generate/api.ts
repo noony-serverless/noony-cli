@@ -2,7 +2,11 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import { toPascalCase, toCamelCase, toKebabCase } from '../../utils/stringUtils';
+import {
+  toPascalCase,
+  toCamelCase,
+  toKebabCase,
+} from '../../utils/stringUtils';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
 
@@ -22,7 +26,9 @@ export function generateApi(name: string, options: ApiOptions) {
   const camelCaseName = toCamelCase(name);
   const kebabCaseName = toKebabCase(name);
 
-  const methodsArg = (options.methods || defaultApiMethods).split(',').map(m => m.trim().toLowerCase());
+  const methodsArg = (options.methods || defaultApiMethods)
+    .split(',')
+    .map(m => m.trim().toLowerCase());
   const methodsForTemplate = {
     get: methodsArg.includes('get'),
     create: methodsArg.includes('create'),
@@ -43,7 +49,13 @@ export function generateApi(name: string, options: ApiOptions) {
   });
 
   // Corrected path as per issue doc: src/chrome/handlers/api/<name>Api.ts
-  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', 'api');
+  const targetDir = path.join(
+    process.cwd(),
+    getSrcPath(),
+    'chrome',
+    'handlers',
+    'api'
+  );
   const targetFilePath = path.join(targetDir, `${pascalCaseName}Api.ts`); // User PascalCase for filename
 
   fs.ensureDirSync(targetDir);
@@ -52,11 +64,18 @@ export function generateApi(name: string, options: ApiOptions) {
   console.log(`API class generated: ${targetFilePath}`);
 
   // Create placeholder Service file if it doesn't exist
-  const serviceDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'services');
+  const serviceDir = path.join(
+    process.cwd(),
+    getSrcPath(),
+    'chrome',
+    'services'
+  );
   fs.ensureDirSync(serviceDir);
   const servicePath = path.join(serviceDir, `${pascalCaseName}Service.ts`);
   if (!fs.existsSync(servicePath)) {
-    fs.writeFileSync(servicePath, `
+    fs.writeFileSync(
+      servicePath,
+      `
 // Placeholder for ${pascalCaseName}Service
 import { Service } from 'typedi';
 import { ${pascalCaseName} } from '../domain/${kebabCaseName}.do'; // Assuming domain object path
@@ -72,7 +91,8 @@ export class ${pascalCaseName}Service {
   async delete${pascalCaseName}(id: string): Promise<boolean> { console.log('Service: delete${pascalCaseName} placeholder hit'); return false; }
   async getAll${pascalCaseName}s(queryParams?: any): Promise<${pascalCaseName}[]> { console.log('Service: getAll${pascalCaseName}s placeholder hit'); return []; }
 }
-`);
+`
+    );
   }
 
   // Create placeholder Domain Object file if it doesn't exist
@@ -80,7 +100,9 @@ export class ${pascalCaseName}Service {
   fs.ensureDirSync(domainDir);
   const domainPath = path.join(domainDir, `${kebabCaseName}.do.ts`);
   if (!fs.existsSync(domainPath)) {
-    fs.writeFileSync(domainPath, `
+    fs.writeFileSync(
+      domainPath,
+      `
 // Placeholder for ${pascalCaseName} Domain Object
 export interface ${pascalCaseName} {
   id?: string;
@@ -88,7 +110,8 @@ export interface ${pascalCaseName} {
   createdAt?: Date;
   updatedAt?: Date;
 }
-`);
+`
+    );
   }
 }
 
@@ -98,6 +121,10 @@ export function registerGenerateApiCommand(program: Command) {
     .aliases(['ga'])
     .description('Generate a new API class')
     .option('--service', 'Corresponds to a service (implicit for now)') // Kept from spec
-    .option('-m, --methods <methods>', 'Comma-separated list of API methods (get,create,update,delete,getAll)', defaultApiMethods)
+    .option(
+      '-m, --methods <methods>',
+      'Comma-separated list of API methods (get,create,update,delete,getAll)',
+      defaultApiMethods
+    )
     .action(generateApi);
 }

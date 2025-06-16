@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { generateFeature } from './feature'; // Import the main feature generator
-import { toKebabCase } from '../../utils/stringUtils';
+// import { toKebabCase } from '../../utils/stringUtils';
 
 interface ResourceOptions {
   // Fields for Domain, DTO, DAO
@@ -71,10 +71,21 @@ export function registerGenerateResourceCommand(program: Command) {
   program
     .command('resource <name>')
     .aliases(['gres', 'res'])
-    .description('Generate a RESTful CRUD resource (domain, DTO, DAO, service, API, handlers, routes, tests)')
-    .option('-f, --fields <fields>', 'Comma-separated fields for Domain, DTO, and DAO (e.g., "name:string,price:number,category:string")')
-    .option('--collection <name>', 'MongoDB collection name for DAO (defaults to pluralized name)')
-    .option('--dao-identifier <field>', 'Primary identifier for DAO methods (default: id)')
+    .description(
+      'Generate a RESTful CRUD resource (domain, DTO, DAO, service, API, handlers, routes, tests)'
+    )
+    .option(
+      '-f, --fields <fields>',
+      'Comma-separated fields for Domain, DTO, and DAO (e.g., "name:string,price:number,category:string")'
+    )
+    .option(
+      '--collection <name>',
+      'MongoDB collection name for DAO (defaults to pluralized name)'
+    )
+    .option(
+      '--dao-identifier <field>',
+      'Primary identifier for DAO methods (default: id)'
+    )
     .option('--route-prefix <prefix>', 'Prefix for API routes (e.g., /v1)')
     .option('--auth <type>', 'Authentication type for handlers/routes')
     .option('--skip-domain', 'Skip Domain Object generation')

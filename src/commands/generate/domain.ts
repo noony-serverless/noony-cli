@@ -2,8 +2,8 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import { toPascalCase, toKebabCase, toCamelCase } from '../../utils/stringUtils';
-import { parseSchemaFields, ParsedField } from '../../utils/schemaParser';
+import { toPascalCase, toKebabCase } from '../../utils/stringUtils';
+import { parseSchemaFields } from '../../utils/schemaParser';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
 
@@ -49,6 +49,9 @@ export function registerGenerateDomainCommand(program: Command) {
     .command('domain <name>')
     .aliases(['do', 'gdo'])
     .description('Generate a new Domain Object interface')
-    .option('-f, --fields <fields>', 'Comma-separated list of domain object fields (e.g., "name:string,description?:string,count:number,tags:string[]")')
+    .option(
+      '-f, --fields <fields>',
+      'Comma-separated list of domain object fields (e.g., "name:string,description?:string,count:number,tags:string[]")'
+    )
     .action(generateDomain);
 }

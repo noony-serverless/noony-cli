@@ -2,7 +2,11 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import { toPascalCase, toCamelCase, toKebabCase } from '../../utils/stringUtils';
+import {
+  toPascalCase,
+  toCamelCase,
+  toKebabCase,
+} from '../../utils/stringUtils';
 import { getSrcPath } from '../../utils/configLoader';
 import { getTemplateContent } from '../../utils/templateManager';
 
@@ -24,7 +28,9 @@ export function generateService(name: string, options: ServiceOptions) {
   const camelCaseName = toCamelCase(name);
   const kebabCaseName = toKebabCase(name);
 
-  const methodsArg = (options.methods || defaultServiceMethods).split(',').map(m => m.trim().toLowerCase());
+  const methodsArg = (options.methods || defaultServiceMethods)
+    .split(',')
+    .map(m => m.trim().toLowerCase());
   const methodsForTemplate = {
     get: methodsArg.includes('get'),
     create: methodsArg.includes('create'),
@@ -44,7 +50,12 @@ export function generateService(name: string, options: ServiceOptions) {
     // registration: options.registration || 'auto', // For future use if template needs to adapt
   });
 
-  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'services');
+  const targetDir = path.join(
+    process.cwd(),
+    getSrcPath(),
+    'chrome',
+    'services'
+  );
   const targetFilePath = path.join(targetDir, `${pascalCaseName}Service.ts`);
 
   fs.ensureDirSync(targetDir);
@@ -64,7 +75,9 @@ NOTE: Manual registration selected. Please update your TypeDI container configur
   fs.ensureDirSync(daoDir);
   const daoPath = path.join(daoDir, `${kebabCaseName}.dao.ts`);
   if (!fs.existsSync(daoPath)) {
-    fs.writeFileSync(daoPath, `
+    fs.writeFileSync(
+      daoPath,
+      `
 // Placeholder for ${pascalCaseName}Dao
 import { Service } from 'typedi';
 import { ObjectId } from 'mongodb';
@@ -123,14 +136,17 @@ export class MongodbConnectService {
 }
     \`);
 }
-`);
+`
+    );
   }
   // Create placeholder Domain Object file if it doesn't exist
   const domainDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'domain');
   fs.ensureDirSync(domainDir);
   const domainPath = path.join(domainDir, `${kebabCaseName}.do.ts`);
   if (!fs.existsSync(domainPath)) {
-    fs.writeFileSync(domainPath, `
+    fs.writeFileSync(
+      domainPath,
+      `
 // Placeholder for ${pascalCaseName} Domain Object
 export interface ${pascalCaseName} {
   id?: string;
@@ -138,13 +154,17 @@ export interface ${pascalCaseName} {
   createdAt?: Date;
   updatedAt?: Date;
 }
-`);
+`
+    );
   }
   // Import Zod into the placeholder DAO for the schema
-  let daoContent = fs.readFileSync(daoPath, 'utf-8');
+  const daoContent = fs.readFileSync(daoPath, 'utf-8');
   if (!daoContent.includes("import { z } from 'zod';")) {
-    fs.writeFileSync(daoPath, `import { z } from 'zod';
-` + daoContent);
+    fs.writeFileSync(
+      daoPath,
+      `import { z } from 'zod';
+` + daoContent
+    );
   }
 }
 
@@ -154,7 +174,15 @@ export function registerGenerateServiceCommand(program: Command) {
     .alias('s')
     .description('Generate a new service class with mappers')
     .option('--dao', 'Generate corresponding DAO (placeholder for now)')
-    .option('--registration <type>', 'Service registration pattern (auto|manual)', 'auto')
-    .option('-m, --methods <methods>', 'Comma-separated list of service methods (get,create,update,delete)', defaultServiceMethods)
+    .option(
+      '--registration <type>',
+      'Service registration pattern (auto|manual)',
+      'auto'
+    )
+    .option(
+      '-m, --methods <methods>',
+      'Comma-separated list of service methods (get,create,update,delete)',
+      defaultServiceMethods
+    )
     .action(generateService);
 }
