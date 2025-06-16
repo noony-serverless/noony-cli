@@ -1,4 +1,5 @@
 // Add to existing src/utils/stringUtils.ts
+// Make sure to handle imports correctly if not already present for pluralize
 import * as pluralizeLib from 'pluralize';
 
 export function toPascalCase(str: string): string {
@@ -16,6 +17,14 @@ export function toKebabCase(str: string): string {
     .toLowerCase();
 }
 
+// Assuming pluralize is already imported or handled, e.g.:
+// import * as pluralizeLib from 'pluralize';
+// export const pluralize = pluralizeLib.plural;
+// For this subtask, if it's not, this simplified version will be used by generate/test.ts later
 export function pluralize(str: string): string {
   return pluralizeLib.plural(str);
+}
+
+export function lowerCase(str: string): string {
+  return str.toLowerCase();
 }

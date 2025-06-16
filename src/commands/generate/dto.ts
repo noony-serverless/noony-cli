@@ -4,6 +4,8 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { toPascalCase, toKebabCase, toCamelCase } from '../../utils/stringUtils';
 import { parseSchemaFields, ParsedField } from '../../utils/schemaParser';
+import { getSrcPath } from '../../utils/configLoader';
+import { getTemplateContent } from '../../utils/templateManager';
 
 interface DtoOptions {
   fields?: string;
@@ -28,8 +30,7 @@ export function generateDto(name: string, options: DtoOptions) {
   // For Main Dto, id is usually a required string (from DB _id.toString())
   // For Update Dto, all fields are partial, id is omitted from body
 
-  const templatePath = path.join(__dirname, '../../templates/dto.hbs');
-  const templateContent = fs.readFileSync(templatePath, 'utf-8');
+  const templateContent = getTemplateContent('dto', 'dto.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
 
   const content = compiledTemplate({
@@ -48,7 +49,7 @@ export function generateDto(name: string, options: DtoOptions) {
     }
   });
 
-  const targetDir = path.join(process.cwd(), 'src', 'chrome', 'handlers', 'dto');
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'chrome', 'handlers', 'dto');
   const targetFilePath = path.join(targetDir, `${kebabCaseName}.dto.ts`);
 
   fs.ensureDirSync(targetDir);

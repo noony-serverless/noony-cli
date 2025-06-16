@@ -4,6 +4,8 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { toPascalCase, toCamelCase, toKebabCase, pluralize } from '../../utils/stringUtils';
 import { parseSchemaFields } from '../../utils/schemaParser';
+import { getSrcPath } from '../../utils/configLoader';
+import { getTemplateContent } from '../../utils/templateManager';
 
 interface DaoOptions {
   collection?: string;
@@ -27,8 +29,7 @@ export function generateDao(name: string, options: DaoOptions) {
   const templateIdentifier = identifierField.toLowerCase() === 'id' ? '_id' : identifierField;
 
 
-  const templatePath = path.join(__dirname, '../../templates/dao.hbs');
-  const templateContent = fs.readFileSync(templatePath, 'utf-8');
+  const templateContent = getTemplateContent('dao', 'dao.hbs');
   const compiledTemplate = Handlebars.compile(templateContent);
 
   const content = compiledTemplate({
@@ -40,7 +41,7 @@ export function generateDao(name: string, options: DaoOptions) {
     identifierField: templateIdentifier, // Use the processed identifier for the template
   });
 
-  const targetDir = path.join(process.cwd(), 'src', 'infra', 'db');
+  const targetDir = path.join(process.cwd(), getSrcPath(), 'infra', 'db');
   const targetFilePath = path.join(targetDir, `${kebabCaseName}.dao.ts`);
 
   fs.ensureDirSync(targetDir);

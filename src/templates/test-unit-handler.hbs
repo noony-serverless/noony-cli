@@ -1,0 +1,93 @@
+// Unit tests for {{pascalCase name}} Handlers
+// Path: src/chrome/handlers/{{feature}}/{{kebabCase name}}.handlers.ts
+
+// Mock dependencies
+// jest.mock('../../../../utils/logger'); // Assuming logger path
+// jest.mock('../api/{{camelCase name}}Api'); // Assuming API path
+
+// Import the handlers to be tested
+import {
+  {{#each methods}}
+  {{this.methodName}}{{../pascalCase name}}Handler,
+  {{/each}}
+} from './{{kebabCase name}}.handlers';
+import { {{pascalCase name}}Api } from '../api/{{camelCase name}}Api'; // For mock typing
+import { Container } from 'typedi';
+
+describe('{{pascalCase name}} Handlers', () => {
+  let mock{{pascalCase name}}Api: jest.Mocked<{{pascalCase name}}Api>;
+
+  beforeEach(() => {
+    // Reset mocks and container before each test
+    jest.resetAllMocks();
+    Container.reset();
+
+    // Setup mock for the API dependency
+    mock{{pascalCase name}}Api = {
+      {{#each methods}}
+      {{this.methodName}}{{../pascalCase name}}: jest.fn(),
+      {{/each}}
+    } as jest.Mocked<{{pascalCase name}}Api>;
+    Container.set({{pascalCase name}}Api, mock{{pascalCase name}}Api);
+  });
+
+{{#each methods}}
+describe('{{this.methodName}}{{../pascalCase name}}Handler', () => {
+  it('should process the request and return {{this.statusCode}}', async () => {
+    // Arrange
+    const mockContext: any = { // Simulate Noony context
+      params: {{#if this.hasParams}}{ {{../camelCase name}}Id: 'test-id' }{{else}}undefined{{/if}},
+      body: {{#if this.hasBody}}{ id: 'test-body-id' }{{else}}undefined{{/if}}, // Example body
+      // ... other context properties if needed
+    };
+
+    const mockServiceResponse = {{#if this.returnsList}}[]{{else}}{ id: 'test-id', /* other mock data */ }{{/if}};
+    mock{{../pascalCase name}}Api.{{this.methodName}}{{../pascalCase name}}.mockResolvedValue(mockServiceResponse as any);
+
+    // Act
+    const result = await {{this.methodName}}{{../pascalCase name}}Handler(mockContext);
+
+    // Assert
+    expect(mock{{../pascalCase name}}Api.{{this.methodName}}{{../pascalCase name}}).toHaveBeenCalledTimes(1);
+    // More specific call checks (adjust as needed):
+    // {{#if this.hasParams}}
+    // expect(mock{{../pascalCase name}}Api.{{this.methodName}}{{../pascalCase name}}).toHaveBeenCalledWith('test-id'{{#if this.hasBody}}, mockContext.body{{/if}});
+    // {{else if this.hasBody}}
+    // expect(mock{{../pascalCase name}}Api.{{this.methodName}}{{../pascalCase name}}).toHaveBeenCalledWith(mockContext.body);
+    // {{else}}
+    // expect(mock{{../pascalCase name}}Api.{{this.methodName}}{{../pascalCase name}}).toHaveBeenCalledWith();
+    // {{/if}}
+
+    expect(result.statusCode).toBe({{this.statusCode}});
+    expect(result.body.data).toEqual(mockServiceResponse);
+    expect(result.body.message).toContain('{{../pascalCase name}} {{this.action}} successfully');
+  });
+
+  it('should handle errors from the API call', async () => {
+    // Arrange
+    const mockContext: any = {
+      params: {{#if this.hasParams}}{ {{../camelCase name}}Id: 'test-id-error' }{{else}}undefined{{/if}},
+      body: {{#if this.hasBody}}{ id: 'test-body-error' }{{else}}undefined{{/if}}, // Example body
+    };
+    const errorMessage = 'API Error';
+    mock{{../pascalCase name}}Api.{{this.methodName}}{{../pascalCase name}}.mockRejectedValue(new Error(errorMessage));
+
+    // Act & Assert
+    // This depends on how your actual handler manages errors.
+    // If it re-throws, use try/catch. If it returns an error response, check for that.
+    try {
+      await {{this.methodName}}{{../pascalCase name}}Handler(mockContext);
+      // If the handler is expected to throw and doesn't, fail the test.
+      // throw new Error('Handler did not throw an error as expected.');
+    } catch (error: any) {
+      expect(error.message).toBe(errorMessage);
+    }
+    // Or, if your handler catches errors and returns a formatted response:
+    // const result = await {{this.methodName}}{{../pascalCase name}}Handler(mockContext);
+    // expect(result.statusCode).toBe(500); // Or your specific error status code
+    // expect(result.body.message).toContain(errorMessage);
+  });
+});
+
+{{/each}}
+});
