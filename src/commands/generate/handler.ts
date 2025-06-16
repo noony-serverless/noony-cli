@@ -87,18 +87,18 @@ export class ${pascalCaseName}Dto {}
   fs.ensureDirSync(typesDir);
   const noonyTypesPath = path.join(typesDir, 'noony.types.ts');
   if(!fs.existsSync(noonyTypesPath)) {
-    fs.writeFileSync(noonyTypesPath, "// Placeholder for NoonyHandler type
+    fs.writeFileSync(noonyTypesPath, `// Placeholder for NoonyHandler type
 export type NoonyHandler = (context: any) => Promise<any>;
-");
+`);
   }
 
   const utilsDir = path.join(process.cwd(), 'src', 'utils');
   fs.ensureDirSync(utilsDir);
   const loggerPath = path.join(utilsDir, 'logger.ts');
   if(!fs.existsSync(loggerPath)) {
-    fs.writeFileSync(loggerPath, "// Placeholder for logger
+    fs.writeFileSync(loggerPath, `// Placeholder for logger
 export const logger = { info: console.log, error: console.error };
-");
+`);
   }
 }
 

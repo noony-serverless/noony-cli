@@ -137,11 +137,11 @@ export interface ${pascalCaseName} {
 }
 `);
   }
-   // Import Zod into the placeholder DAO for the schema
+  // Import Zod into the placeholder DAO for the schema
   let daoContent = fs.readFileSync(daoPath, 'utf-8');
   if (!daoContent.includes("import { z } from 'zod';")) {
-    fs.writeFileSync(daoPath, "import { z } from 'zod';
-" + daoContent);
+    fs.writeFileSync(daoPath, `import { z } from 'zod';
+` + daoContent);
   }
 }
 

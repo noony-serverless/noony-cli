@@ -1,6 +1,6 @@
 import { z } from 'zod'; // Required for ObjectId validation if used
-import { ObjectId } from 'mongodb'; // For z.instanceof(ObjectId)
 
+type ObjectId = string;
 export interface ParsedField {
   name: string;
   type: string; // The original type string from input, e.g., "string", "number[]", "MyDto"
