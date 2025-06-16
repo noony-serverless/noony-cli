@@ -67,8 +67,8 @@ const builtInTemplates: TemplateInfo[] = [
 ];
 
 export function listTemplates(options: any) {
-  console.log("
-📦 Available Built-in Templates:");
+  console.log(`
+📦 Available Built-in Templates:`);
   console.log("--------------------------------");
 
   if (builtInTemplates.length === 0) {
@@ -81,8 +81,7 @@ export function listTemplates(options: any) {
       //   console.warn(`Warning: Template file not found for ${template.name} at ${template.filePath}`);
       //   return;
       // }
-      console.log(`
-  • Name: ${template.name}`);
+      console.log(`  • Name: ${template.name}`);
       console.log(`    Description: ${template.description}`);
       console.log(`    File Path: ${template.filePath}`);
       // if (template.keyPlaceholders && template.keyPlaceholders.length > 0) {
@@ -92,8 +91,8 @@ export function listTemplates(options: any) {
   }
   console.log("--------------------------------");
   // TODO: Future enhancement - Discover and list custom templates from .noonyrc.json
-  console.log("
-ℹ️  Note: Custom template listing will be available after .noonyrc.json configuration is implemented.");
+  console.log(`
+ℹ️  Note: Custom template listing will be available after .noonyrc.json configuration is implemented.`);
 }
 
 export function registerListTemplatesCommand(program: Command) {

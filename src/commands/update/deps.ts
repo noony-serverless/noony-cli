@@ -20,12 +20,12 @@ async function findPotentialServices(basePath: string, pattern: string, componen
 }
 
 export async function updateDeps(options: any) {
-  console.log("
-🔄 Checking for potential dependency updates (TypeDI container)...");
+  console.log(`
+🔄 Checking for potential dependency updates (TypeDI container)...`);
   console.log("------------------------------------------------------------------");
   console.log("This command lists potential services, APIs, and DAOs that might need to be registered in your TypeDI container.");
-  console.log("It does NOT automatically modify any files.
-");
+  console.log(`It does NOT automatically modify any files.
+`);
 
   const projectRoot = process.cwd();
   const servicesPath = path.join(projectRoot, 'src', 'chrome', 'services');
@@ -49,8 +49,8 @@ export async function updateDeps(options: any) {
     const apiClasses = await findPotentialServices(apiPath, '*Api.ts', 'API Class');
      if (apiClasses.length > 0) {
       foundSomething = true;
-      console.log("
-Found potential API classes (@Service classes usually):");
+      console.log(`
+Found potential API classes (@Service classes usually):`);
       apiClasses.forEach(ac => console.log(`  - ${ac} (in ${path.relative(projectRoot, apiPath)} )`));
     }
   } else {
@@ -64,8 +64,8 @@ Found potential API classes (@Service classes usually):");
     const filteredDaoClasses = daoClasses.filter(dc => dc !== 'MongoDao');
     if (filteredDaoClasses.length > 0) {
       foundSomething = true;
-      console.log("
-Found potential DAOs (some might be @Service):");
+      console.log(`
+Found potential DAOs (some might be @Service):`);
       filteredDaoClasses.forEach(dc => console.log(`  - ${dc} (in ${path.relative(projectRoot, daoPath)} )`));
     }
   } else {
@@ -76,9 +76,9 @@ Found potential DAOs (some might be @Service):");
      console.log("No potential services, APIs, or DAOs found in standard locations.");
   }
 
-  console.log("
-------------------------------------------------------------------");
-  console.log("ACTION REQUIRED: Please review the list above and ensure these components are correctly registered in your TypeDI container file (e.g., src/config/container.ts or where you manage your TypeDI setup).");
+  console.log(`
+------------------------------------------------------------------`);
+  console.log(`ACTION REQUIRED: Please review the list above and ensure these components are correctly registered in your TypeDI container file (e.g., src/config/container.ts or where you manage your TypeDI setup).`);
   console.log("For components decorated with @Service(), TypeDI might handle them automatically if your setup scans for them. For others, manual registration might be needed.");
 }
 

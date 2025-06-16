@@ -40,7 +40,7 @@ async function checkHandlerNamingConvention(): Promise<ValidationResult> {
   // This is a simplified check. A real check would be more sophisticated.
   const files = await glob('**/*.ts', { cwd: handlersBasePath });
   let incorrectFiles: string[] = [];
-  files.forEach(file => {
+  files.forEach((file: string) => {
     if (file.endsWith('.handlers.ts') || file.endsWith('.handler.ts')) {
       // Potentially correct by our convention
     } else if (file.endsWith('.ts') && !file.endsWith('.test.ts') && !file.endsWith('.spec.ts')) {
@@ -80,8 +80,8 @@ async function checkHandlerNamingConvention(): Promise<ValidationResult> {
 
 
 export async function validateProject(options: any) {
-  console.log("
-🔍 Validating project structure and conventions...");
+  console.log(`
+🔍 Validating project structure and conventions...`);
   console.log("-------------------------------------------------");
 
   const results: ValidationResult[] = [];
@@ -106,8 +106,8 @@ export async function validateProject(options: any) {
   // - Zod schema presence in DTOs (complex)
   // - etc.
 
-  console.log("
-Validation Results:");
+  console.log(`
+Validation Results:`);
   let issuesFound = 0;
   results.forEach(res => {
     console.log(`  [${res.status}] ${res.check}: ${res.message}`);
